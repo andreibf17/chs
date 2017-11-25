@@ -5,4 +5,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
+    <string name="location">LOCATIONS</string>
+    <string name="mode">MODES</string>
+    <string name="title_activity_location">Locations</string>
+    <string name="title_activity_mode">Modes</string>
 </resources>
