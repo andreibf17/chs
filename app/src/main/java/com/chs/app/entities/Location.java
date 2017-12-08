@@ -26,6 +26,7 @@ public class Location implements Parcelable{
     private GoogleMap map;
     private Circle circle;
     private int image;
+    private boolean receiveNotification;
 
     public Location(LatLng latlng, String name, int image) {
         this.latlng = latlng;
@@ -69,7 +70,7 @@ public class Location implements Parcelable{
         iconGenerator.setTextAppearance(Color.WHITE);
         map.addMarker(new MarkerOptions()
                 .position(latlng)
-                .icon(BitmapDescriptorFactory.fromBitmap(iconGenerator.makeIcon(name))));
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
     }
 
     public int getImage() {

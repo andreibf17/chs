@@ -9,6 +9,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chs.app.entities.Location;
@@ -35,6 +36,8 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
         mapFragment.getMapAsync(this);
 
         location = this.getIntent().getExtras().getParcelable("Location");
+        TextView title = findViewById(R.id.title);
+        title.setText(location.getName());
     }
 
     /**
