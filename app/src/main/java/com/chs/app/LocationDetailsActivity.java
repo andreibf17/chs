@@ -8,6 +8,9 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,6 +41,17 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
         location = this.getIntent().getExtras().getParcelable("Location");
         TextView title = findViewById(R.id.title);
         title.setText(location.getName());
+        Button mode = findViewById(R.id.locationMode);
+        mode.setText(location.getMode().getName());
+
+        CheckBox checkbox = findViewById(R.id.checkBox);
+        checkbox.setActivated(location.getReceiveNotification());
+        checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                location.setReceiveNotification(isChecked);
+            }
+        });
     }
 
     /**

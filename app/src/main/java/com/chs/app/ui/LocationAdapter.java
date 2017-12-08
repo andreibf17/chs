@@ -56,8 +56,7 @@ public class LocationAdapter extends ArrayAdapter<Location> {
         final Location hItem = locations.get(position);
 
         itemHolder.ilTitle.setText(hItem.getName());
-        /*TODO*/
-        itemHolder.ilMode.setText(/*hItem.getMode().getName()*/"Mode");
+        itemHolder.ilMode.setText(hItem.getMode().getName());
         itemHolder.ilIcon.setImageResource(hItem.getImage());
 
         return view;

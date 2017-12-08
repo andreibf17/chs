@@ -27,11 +27,13 @@ public class Location implements Parcelable{
     private Circle circle;
     private int image;
     private boolean receiveNotification;
+    private Mode mode;
 
-    public Location(LatLng latlng, String name, int image) {
+    public Location(LatLng latlng, String name, int image, Mode mode) {
         this.latlng = latlng;
         this.name = name;
         this.image = image;
+        this.mode = mode;
     }
 
     public LatLng getLatlng() {
@@ -81,6 +83,11 @@ public class Location implements Parcelable{
         this.map = map;
     }
 
+    public Mode getMode() { return mode; }
+
+    public void setReceiveNotification(boolean receiveNotification) { this.receiveNotification = receiveNotification; }
+
+    public boolean getReceiveNotification() { return receiveNotification; }
     @Override
     public int describeContents() {
         return 0;
@@ -91,9 +98,8 @@ public class Location implements Parcelable{
         dest.writeDouble(latlng.latitude);
         dest.writeDouble(latlng.longitude);
         dest.writeString(name);
-        /*TODO*/
-        //dest.writeString("Mode");
         dest.writeInt(image);
+        dest.writeString(mode.getName());
     }
 
     /**
@@ -101,7 +107,7 @@ public class Location implements Parcelable{
      */
     public static final Parcelable.Creator<Location> CREATOR = new Parcelable.Creator<Location>() {
         public Location createFromParcel(Parcel in) {
-            return new Location(new LatLng(in.readDouble(), in.readDouble()), in.readString(), in.readInt());
+            return new Location(new LatLng(in.readDouble(), in.readDouble()), in.readString(), in.readInt(), new Mode(in.readString()));
         }
 
         public Location[] newArray(int size) {

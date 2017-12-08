@@ -22,4 +22,8 @@
         <item name="colorAccent">@color/themeBlueColor</item>
     </style>
 
+    <style name="CheckBoxColor">
+        <item name="colorAccent">@color/themeBlueColor</item>
+    </style>
+
 </resources>

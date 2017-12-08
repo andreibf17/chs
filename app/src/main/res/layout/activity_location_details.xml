@@ -1,13 +1,13 @@
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:weightSum="100">
+    android:layout_height="match_parent">
 
     <LinearLayout
+        android:id="@+id/mapLayout"
         android:layout_width="match_parent"
-        android:layout_height="350dp"
+        android:layout_height="500dp"
         android:weightSum="100"
         android:orientation="vertical">
         <TextView
@@ -45,9 +45,33 @@
             android:layout_width="match_parent"
             android:layout_height="30dp"
             android:layout_marginTop="20dp"
-            android:layout_weight="10"
-            android:theme="@style/SeekBarColor"/>
+            android:theme="@style/SeekBarColor"
+            android:layout_marginBottom="10dp" />
 
+        <android.support.v7.widget.AppCompatCheckBox
+            android:id="@+id/checkBox"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="Turn on notifications for this location"
+            android:layout_marginLeft="5dp"
+            android:theme="@style/CheckBoxColor"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:weightSum="100"
+            android:gravity="center">
+            <Button
+                android:id="@+id/locationMode"
+                android:layout_width="0dp"
+                android:layout_height="100dp"
+                android:layout_weight="90"
+                android:text="Mode"
+                android:gravity="center"
+                android:textColor="#000"
+                android:textStyle="bold"
+                android:textSize="40dp"
+                android:background="@color/modeBackgroundColor" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</RelativeLayout>
