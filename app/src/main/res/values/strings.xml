@@ -9,4 +9,5 @@
     <string name="mode">MODES</string>
     <string name="title_activity_location">Locations</string>
     <string name="title_activity_mode">Modes</string>
+    <string name="title_activity_location_details">Map</string>
 </resources>
