@@ -8,4 +8,11 @@
     tools:context="com.chs.app.LocationActivity"
     tools:showIn="@layout/app_location">
 
+    <ListView
+        android:id="@+id/listLocations"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="7sp"></ListView>
+
 </android.support.constraint.ConstraintLayout>
