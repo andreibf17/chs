@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -17,13 +16,11 @@ import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.chs.app.db.DBUtilities;
 import com.chs.app.entities.Location;
-import com.chs.app.entities.Mode;
 import com.chs.app.ui.LocationAdapter;
-import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class LocationActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -39,8 +36,12 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Intent intent = new Intent(getApplicationContext(), LocationDetailsActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean("Update", false);
+                bundle.putString("Fixed", "No");
+                intent.putExtras(bundle);
+                startActivity(intent);
             }
         });
 
@@ -53,16 +54,16 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        List<Location> locations = new ArrayList<Location>(Arrays.asList(
-                new Location(new LatLng(45.749199, 21.241054), "Camin 8", R.drawable.ic_home_black_24dp, new Mode("Mode1")),
-                new Location(new LatLng(45.7450284, 21.2275766), "Facultate", R.drawable.ic_add_location_black_24dp, new Mode("Mode2")),
-                new Location(new LatLng(45.749199, 21.241054), "Camin 8", R.drawable.ic_home_black_24dp, new Mode("Mode1")),
-                new Location(new LatLng(45.7450284, 21.2275766), "Facultate", R.drawable.ic_add_location_black_24dp, new Mode("Mode2")),
-                new Location(new LatLng(45.749199, 21.241054), "Camin 8", R.drawable.ic_home_black_24dp, new Mode("Mode1")),
-                new Location(new LatLng(45.7450284, 21.2275766), "Facultate", R.drawable.ic_add_location_black_24dp, new Mode("Mode2")),
-                new Location(new LatLng(45.749199, 21.241054), "Camin 8", R.drawable.ic_home_black_24dp, new Mode("Mode1")),
-                new Location(new LatLng(45.7450284, 21.2275766), "Facultate", R.drawable.ic_add_location_black_24dp, new Mode("Mode2"))
-        ));
+        setList();
+    }
+
+    private void setList() {
+        List<Location> locations = new ArrayList<Location>();
+        locations.add(DBUtilities.getHome());
+        locations.add(DBUtilities.getSchool());
+        locations.add(DBUtilities.getWork());
+        locations.addAll(DBUtilities.getAllLocations());
+
         ListView listLocations = findViewById(R.id.listLocations);
         final LocationAdapter adapter = new LocationAdapter(this, R.layout.item_location, locations);
         listLocations.setAdapter(adapter);
@@ -71,16 +72,49 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
                 Animation animation = new AlphaAnimation(0.3f, 1.0f);
-                animation.setDuration(4000);
+                animation.setDuration(3000);
                 view.startAnimation(animation);
 
                 Intent intent = new Intent(getApplicationContext(), LocationDetailsActivity.class);
                 Bundle bundle = new Bundle();
-                bundle.putParcelable("Location", (Location) adapterView.getItemAtPosition(i));
+                if(i > 2) {
+                    bundle.putParcelable("Location", (Location) adapterView.getItemAtPosition(i));
+                    bundle.putBoolean("Update", true);
+                    bundle.putString("Fixed", "No");
+                } else {
+                    switch(i) {
+                        case 0: {
+                            bundle.putString("Fixed", "Home");
+                            break;
+                        }
+                        case 1: {
+                            bundle.putString("Fixed", "School");
+                            break;
+                        }
+                        case 2: {
+                            bundle.putString("Fixed", "Work");
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    if(((Location) adapterView.getItemAtPosition(i)).getName().startsWith("Set")) {
+                        bundle.putBoolean("Update", false);
+                    } else {
+                        bundle.putParcelable("Location", (Location) adapterView.getItemAtPosition(i));
+                        bundle.putBoolean("Update", true);
+                    }
+                }
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
         });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        setList();
     }
 
     @Override

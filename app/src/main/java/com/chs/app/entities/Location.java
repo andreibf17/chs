@@ -1,17 +1,22 @@
 package com.chs.app.entities;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
+import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.maps.android.ui.IconGenerator;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Created by Bogdan Cristian Vlad on 08-Dec-17.
@@ -24,70 +29,116 @@ public class Location implements Parcelable{
     private LatLng latlng;
     private String name;
     private GoogleMap map;
-    private Circle circle;
+    private Polygon polygon;
+    private List<LatLng> polygonPoints;
     private int image;
     private boolean receiveNotification;
     private Mode mode;
 
-    public Location(LatLng latlng, String name, int image, Mode mode) {
+    private int index;
+
+    public Location() {}
+
+    public Location(String name, LatLng latlng, int image, boolean receiveNotification, List<LatLng> polygonPoints, Mode mode) {
         this.latlng = latlng;
         this.name = name;
         this.image = image;
+        this.receiveNotification = receiveNotification;
+        this.polygonPoints = polygonPoints;
         this.mode = mode;
     }
 
-    public LatLng getLatlng() {
-        return latlng;
+    public Polygon getPolygon() { return this.polygon; }
+
+    public List<LatLng> getPolygonPoints() { return polygonPoints; }
+
+    public void setPolygonPoints(List<LatLng> polygonPoints) { this.polygonPoints = polygonPoints; }
+
+    public void setPolygon() { polygon = map.addPolygon(new PolygonOptions().addAll(polygonPoints).strokeColor(Constants.POLYGON_STROKE_COLOR)); }
+
+    public int getIndex() { return index; }
+
+    public void setIndex(int index) { this.index = index; }
+
+    public LatLng getLatlng() { return latlng; }
+
+    public void setLatlng(LatLng latlng) { this.latlng = latlng; }
+
+    public String getName() { return name; }
+
+    public void setName(String name) { this.name = name; }
+
+    public void widenPolygon(int units) {
+        if (polygon != null) {
+            List<LatLng> points = polygon.getPoints();
+            polygon.remove();
+            polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
+                    new LatLng(points.get(0).latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
+                    new LatLng(points.get(1).latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
+                    new LatLng(points.get(2).latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5),
+                    new LatLng(points.get(3).latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5)
+            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+        } else {
+            polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
+                    new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
+                    new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
+                    new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5),
+                    new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5)
+            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+        }
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Method that creates a circle on the map, around the marker (saved location).
-     * The method actually adds the circle the first time, and for the next times it deletes the previous one and creates another with the current parameters.
-     * @param radius the radius of the circle
-     */
-    public void setCircle(int radius) {
-        if(circle != null)
-            circle.remove();
-        circle = map.addCircle(new CircleOptions()
-                            .center(latlng)
-                            .radius(radius * 3)
-                            .strokeColor(Color.YELLOW));
+    public void heightenPolygon(int units) {
+        if(polygon != null) {
+            polygon.remove();
+            List<LatLng> points = polygon.getPoints();
+            polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
+                    new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, points.get(0).longitude),
+                    new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, points.get(1).longitude),
+                    new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, points.get(2).longitude),
+                    new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, points.get(3).longitude)
+            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+        } else {
+            polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
+                    new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, latlng.longitude),
+                    new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, latlng.longitude),
+                    new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, latlng.longitude),
+                    new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, latlng.longitude)
+            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+        }
     }
 
     /**
      * Method that creates a marker for a saved location.
-     * @param activity usually the current activity from where it is called
+     * @param context usually the current activity from where it is called
      */
-    public void setMarker(Activity activity) {
-        IconGenerator iconGenerator = new IconGenerator(activity);
+    public Marker setMarker(Context context) {
+        IconGenerator iconGenerator = new IconGenerator(context);
         iconGenerator.setStyle(IconGenerator.STYLE_BLUE);
         iconGenerator.setTextAppearance(Color.WHITE);
-        map.addMarker(new MarkerOptions()
-                .position(latlng)
-                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+        return map.addMarker(new MarkerOptions()
+                                .position(latlng)
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
     }
 
-    public int getImage() {
-        return image;
-    }
+    public void removePolygon() { if(polygon != null) polygon.remove(); }
 
-    public void setMap(GoogleMap map) {
-        this.map = map;
-    }
+    public int getImage() { return image; }
+
+    public void setImage(int image) { this.image = image; }
+
+    public GoogleMap getMap() { return map; }
+
+    public void setMap(GoogleMap map) { this.map = map; }
 
     public Mode getMode() { return mode; }
+
+    public void setMode(Mode mode) { this.mode = mode; }
 
     public void setReceiveNotification(boolean receiveNotification) { this.receiveNotification = receiveNotification; }
 
     public boolean getReceiveNotification() { return receiveNotification; }
+
     @Override
     public int describeContents() {
         return 0;
@@ -95,11 +146,14 @@ public class Location implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeByte((byte)(receiveNotification ? 1 : 0));
+        dest.writeList(polygonPoints);
+        dest.writeString(name);
         dest.writeDouble(latlng.latitude);
         dest.writeDouble(latlng.longitude);
-        dest.writeString(name);
         dest.writeInt(image);
         dest.writeString(mode.getName());
+        //TODO: add here other fields of mode
     }
 
     /**
@@ -107,7 +161,19 @@ public class Location implements Parcelable{
      */
     public static final Parcelable.Creator<Location> CREATOR = new Parcelable.Creator<Location>() {
         public Location createFromParcel(Parcel in) {
-            return new Location(new LatLng(in.readDouble(), in.readDouble()), in.readString(), in.readInt(), new Mode(in.readString()));
+            boolean receiveNotif = in.readByte() == 1;
+            ArrayList<LatLng> coordinates = new ArrayList<LatLng>();
+            in.readList(coordinates, LatLng.class.getClassLoader());
+            return new Location(
+                    in.readString(),
+                    new LatLng(in.readDouble(), in.readDouble()),
+                    in.readInt(),
+                    receiveNotif,
+                    coordinates,
+                    new Mode(
+                            in.readString()
+                    )
+            );
         }
 
         public Location[] newArray(int size) {

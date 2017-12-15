@@ -1,5 +1,6 @@
 package com.chs.app;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
@@ -11,6 +12,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+
+import com.chs.app.db.DBUtilities;
+import com.chs.app.entities.Mode;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -32,6 +36,15 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        DBUtilities db = new DBUtilities();
+        DBUtilities.initialize(
+                getSharedPreferences("location_preferences", Context.MODE_PRIVATE),
+                getSharedPreferences("mode_preferences", Context.MODE_PRIVATE)
+        );
+
+        DBUtilities.saveMode(new Mode("Mode1"));
+        DBUtilities.saveMode(new Mode("Mode2"));
+        DBUtilities.saveMode(new Mode("Mode3"));
     }
 
     public void moveToLocation(View view) {

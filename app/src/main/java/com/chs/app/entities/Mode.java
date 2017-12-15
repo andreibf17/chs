@@ -7,6 +7,11 @@ package com.chs.app.entities;
 public class Mode {
 
     private String name;
+    private int index;
+
+    public int getIndex() { return index; }
+
+    public void setIndex(int index) { this.index = index; }
 
     public Mode(String name) {
         this.name = name;

@@ -8,24 +8,39 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.chs.app.db.DBUtilities;
+import com.chs.app.entities.Constants;
 import com.chs.app.entities.Location;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 public class LocationDetailsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
-    private SeekBar seekBar;
-    private Location location;
+    private Location location = new Location();
+    private boolean update;
+    private boolean markerSet = false;
+    private SeekBar widthSeekBar;
+    private SeekBar heightSeekBar;
+    private CheckBox checkbox;
+    private boolean dirty = false;
+    private EditText editText;
 
     private final int LOCATION_REQ_PERMISSION = 1;
 
@@ -38,20 +53,26 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        location = this.getIntent().getExtras().getParcelable("Location");
-        TextView title = findViewById(R.id.title);
-        title.setText(location.getName());
-        Button mode = findViewById(R.id.locationMode);
-        mode.setText(location.getMode().getName());
+        editText = findViewById(R.id.locationTitle);
+        update = this.getIntent().getExtras().getBoolean("Update");
 
-        CheckBox checkbox = findViewById(R.id.checkBox);
-        checkbox.setActivated(location.getReceiveNotification());
+        checkbox = findViewById(R.id.checkBox);
         checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                location.setReceiveNotification(isChecked);
+                if(location != null)
+                    location.setReceiveNotification(isChecked);
             }
         });
+
+        if(update) {
+            location = this.getIntent().getExtras().getParcelable("Location");
+            TextView title = findViewById(R.id.locationTitle);
+            title.setText(location.getName());
+            Button mode = findViewById(R.id.locationMode);
+            mode.setText(location.getMode().getName());
+            checkbox.setChecked(location.getReceiveNotification());
+        }
     }
 
     /**
@@ -66,22 +87,20 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        location.setMap(mMap);  //map must be set before any other operations with the location
         mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+
         if (checkLocationPermission())
             mMap.setMyLocationEnabled(true);
         else
             askLocationPermission();
 
-        location.setMarker(this);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(location.getLatlng()));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
-        seekBar = findViewById(R.id.seekBar);
-        location.setCircle(0);
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        widthSeekBar = findViewById(R.id.widthSeekBar);
+        widthSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                location.setCircle(progress);
+                if(location != null && location.getLatlng() != null && location.getMap() != null)
+                    location.widenPolygon(progress);
+                dirty = true;
             }
 
             @Override
@@ -94,6 +113,104 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
 
             }
         });
+
+        heightSeekBar = findViewById(R.id.heightSeekBar);
+        heightSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(location != null && location.getLatlng() != null && location.getMap() != null)
+                    location.heightenPolygon(progress);
+                dirty = true;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                dirty = true;
+                location.setReceiveNotification(checkbox.isChecked());
+            }
+        });
+
+        editText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                dirty = true;
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                dirty = true;
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                dirty = true;
+                location.setName(editText.getText().toString());
+            }
+        });
+
+        if(update) {
+            location.setMap(mMap);  //map must be set before any other operations with the location
+            location.setMarker(this);
+            location.setPolygon();
+            heightSeekBar.setProgress((int)((location.getPolygonPoints().get(0).latitude - location.getLatlng().latitude) / Constants.POLYGON_UNIT));
+            widthSeekBar.setProgress((int)((location.getPolygonPoints().get(0).longitude - location.getLatlng().longitude) / Constants.POLYGON_UNIT));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(location.getLatlng()));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+        } else {
+            LocationServices.getFusedLocationProviderClient(this).getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<android.location.Location>() {
+                        @Override
+                        public void onSuccess(android.location.Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+                                mMap.animateCamera(CameraUpdateFactory.zoomTo(20));
+                            }
+                        }
+                    });
+            heightSeekBar.setEnabled(false);
+            widthSeekBar.setEnabled(false);
+            mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
+
+                @Override
+                public void onMapLongClick(LatLng point) {
+                    if(!markerSet) {
+                        markerSet = true;
+                        location.setMap(mMap);
+                        location.setLatlng(point);
+                        location.setMarker(getApplicationContext());
+                        heightSeekBar.setEnabled(true);
+                        widthSeekBar.setEnabled(true);
+                    }
+                    dirty = true;
+                }
+            });
+            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    marker.remove();
+                    location.removePolygon();
+                    location.setLatlng(null);
+                    heightSeekBar.setEnabled(false);
+                    widthSeekBar.setEnabled(false);
+                    markerSet = false;
+                    dirty = false;
+                    return false;
+                }
+            });
+        }
     }
 
     // Check for permission to access Location
@@ -128,5 +245,59 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
                 break;
             }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(!update) {
+            if(dirty) {
+                location.setName(editText.getText().toString());
+                location.setReceiveNotification(checkbox.isChecked());
+                location.setMode(DBUtilities.getMode(1)); //TODO
+                switch(getIntent().getExtras().getString("Fixed")) {
+                    case "Home": {
+                        location.setImage(R.drawable.ic_home_black_24dp);
+                        DBUtilities.saveHome(location);
+                        break;
+                    }
+                    case "School": {
+                        location.setImage(R.drawable.ic_school_black_24dp);
+                        DBUtilities.saveSchool(location);
+                        break;
+                    }
+                    case "Work": {
+                        location.setImage(R.drawable.ic_work_black_24dp);
+                        DBUtilities.saveWork(location);
+                        break;
+                    }
+                    default: {
+                        location.setImage(R.drawable.ic_location_on_black_24dp);    //TODO: Add a choice box for the user (dynamic value of image)
+                        DBUtilities.saveLocation(location);
+                        break;
+                    }
+                }
+
+            }
+        } else {
+            switch(getIntent().getExtras().getString("Fixed")) {
+                case "Home": {
+                    DBUtilities.updateHome(location);
+                    break;
+                }
+                case "School": {
+                    DBUtilities.updateSchool(location);
+                    break;
+                }
+                case "Work": {
+                    DBUtilities.updateWork(location);
+                    break;
+                }
+                default: {
+                    DBUtilities.updateLocation(location);
+                    break;
+                }
+            }
+        }
+        super.onBackPressed();
     }
 }
