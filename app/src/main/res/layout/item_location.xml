@@ -29,7 +29,7 @@
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:text="Home"
-                    android:textSize="20dp"/>
+                    android:textSize="20sp"/>
             </RelativeLayout>
 
             <LinearLayout
@@ -45,7 +45,7 @@
                     android:layout_centerVertical="true"
                     android:text="Mode"
                     android:textAlignment="center"
-                    android:textSize="20dp"/>
+                    android:textSize="20sp"/>
             </LinearLayout>
         </RelativeLayout>
 
@@ -57,7 +57,8 @@
             <ImageView
                 android:id="@+id/ilIcon"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:contentDescription="Location Icon"/>
         </android.support.v7.widget.CardView>
     </LinearLayout>
 

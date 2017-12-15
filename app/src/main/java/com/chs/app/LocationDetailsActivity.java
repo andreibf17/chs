@@ -15,7 +15,6 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.chs.app.db.DBUtilities;
@@ -67,8 +66,7 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
 
         if(update) {
             location = this.getIntent().getExtras().getParcelable("Location");
-            TextView title = findViewById(R.id.locationTitle);
-            title.setText(location.getName());
+            editText.setText(location.getName());
             Button mode = findViewById(R.id.locationMode);
             mode.setText(location.getMode().getName());
             checkbox.setChecked(location.getReceiveNotification());
@@ -240,7 +238,7 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
                         mMap.setMyLocationEnabled(true);
                     startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 } else {
-                    Toast.makeText(this, "Application requires location permissions", Toast.LENGTH_LONG);
+                    Toast.makeText(this, "Application requires location permissions", Toast.LENGTH_LONG).show();
                 }
                 break;
             }

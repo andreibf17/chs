@@ -62,7 +62,7 @@ public class DBUtilities {
             editor.putString("Location" + locationLastIndex + "Polygon", pointsToString(location.getPolygon().getPoints())).apply();
             editor.putInt("Location" + locationLastIndex + "ModeIndex", location.getMode().getIndex()).apply();
             locationLastIndex++;
-            editor.putInt("LocationLastIndex", locationLastIndex);
+            editor.putInt("LocationLastIndex", locationLastIndex).apply();
         }
     }
 
@@ -229,10 +229,10 @@ public class DBUtilities {
 
     public static void saveMode(Mode mode) {
         SharedPreferences.Editor editor = modeDb.edit();
-        editor.putString("Mode" + modeLastIndex + "Name", mode.getName());
+        editor.putString("Mode" + modeLastIndex + "Name", mode.getName()).apply();
         //TODO: Add here other fields for mode
         modeLastIndex++;
-        editor.putInt("ModeLastIndex", modeLastIndex);
+        editor.putInt("ModeLastIndex", modeLastIndex).apply();
     }
 
     public static Mode getMode(int index) {
