@@ -5,11 +5,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -18,7 +24,6 @@ import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.chs.app.db.DBUtilities;
-import com.chs.app.entities.Constants;
 import com.chs.app.entities.Location;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -29,7 +34,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnSuccessListener;
 
-public class LocationDetailsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class LocationDetailsActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
     private GoogleMap mMap;
     private Location location = new Location();
@@ -37,6 +42,7 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
     private boolean markerSet = false;
     private SeekBar widthSeekBar;
     private SeekBar heightSeekBar;
+    private SeekBar rotateSeekBar;
     private CheckBox checkbox;
     private boolean dirty = false;
     private EditText editText;
@@ -47,6 +53,17 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_details);
+
+        Toolbar toolbar = findViewById(R.id.toolbarLocationDetails);
+        setSupportActionBar(toolbar);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -167,17 +184,19 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
             mMap.moveCamera(CameraUpdateFactory.newLatLng(location.getLatlng()));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
         } else {
-            LocationServices.getFusedLocationProviderClient(this).getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<android.location.Location>() {
-                        @Override
-                        public void onSuccess(android.location.Location location) {
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
-                                mMap.animateCamera(CameraUpdateFactory.zoomTo(20));
+            if(checkLocationPermission()) {
+                LocationServices.getFusedLocationProviderClient(this).getLastLocation()
+                        .addOnSuccessListener(this, new OnSuccessListener<android.location.Location>() {
+                            @Override
+                            public void onSuccess(android.location.Location location) {
+                                // Got last known location. In some rare situations this can be null.
+                                if (location != null) {
+                                    mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
+                                    mMap.animateCamera(CameraUpdateFactory.zoomTo(20));
+                                }
                             }
-                        }
-                    });
+                        });
+            }
             heightSeekBar.setEnabled(false);
             widthSeekBar.setEnabled(false);
             mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
@@ -254,22 +273,22 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
                 location.setMode(DBUtilities.getMode(1)); //TODO
                 switch(getIntent().getExtras().getString("Fixed")) {
                     case "Home": {
-                        location.setImage(R.drawable.ic_home_black_24dp);
+                        location.setImage(Constants.HOME_ICON);
                         DBUtilities.saveHome(location);
                         break;
                     }
                     case "School": {
-                        location.setImage(R.drawable.ic_school_black_24dp);
+                        location.setImage(Constants.SCHOOL_BUTTON);
                         DBUtilities.saveSchool(location);
                         break;
                     }
                     case "Work": {
-                        location.setImage(R.drawable.ic_work_black_24dp);
+                        location.setImage(Constants.WORK_BUTTON);
                         DBUtilities.saveWork(location);
                         break;
                     }
                     default: {
-                        location.setImage(R.drawable.ic_location_on_black_24dp);    //TODO: Add a choice box for the user (dynamic value of image)
+                        location.setImage(R.drawable.ic_location_on_black_24dp);
                         DBUtilities.saveLocation(location);
                         break;
                     }
@@ -297,5 +316,23 @@ public class LocationDetailsActivity extends FragmentActivity implements OnMapRe
             }
         }
         super.onBackPressed();
+    }
+
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_preferences) {
+        } else if (id == R.id.nav_howto) {
+
+        } else if (id == R.id.nav_about) {
+            startActivity(new Intent(this, AboutActivity.class));
+        }
+
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
     }
 }

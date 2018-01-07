@@ -11,4 +11,17 @@
     <string name="title_activity_mode">Modes</string>
     <string name="edit_mode_button">Edit</string>
     <string name="title_activity_location_details">Map</string>
+
+    <string name="about_text"><![CDATA[Applcation designed as a school project for <br> the subject of Mobile Systems and Applications.
+                                        <br><br>
+                                        Designed by
+                                        <br><br>
+                                        <strong>Bogdan Vlad</strong><br>
+                                        and<br>
+                                        <strong>Fara Andrei</strong>
+                                        <br><br>
+                                        Project conducted under the supervision of<br>
+                                        <strong>ș.l. Alexandru Topîrceanu</strong><br>
+                                        at the<br>
+                                        <strong>Politehnica University Timișoara</strong>]]></string>
 </resources>

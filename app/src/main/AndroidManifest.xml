@@ -48,7 +48,11 @@
 
         <activity
             android:name=".LocationDetailsActivity"
-            android:label="@string/title_activity_location_details" />
+            android:label="Location Details"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".AboutActivity"
+            android:label="About"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

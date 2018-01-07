@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.chs.app.Constants;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
@@ -54,7 +55,7 @@ public class Location implements Parcelable{
 
     public void setPolygonPoints(List<LatLng> polygonPoints) { this.polygonPoints = polygonPoints; }
 
-    public void setPolygon() { polygon = map.addPolygon(new PolygonOptions().addAll(polygonPoints).strokeColor(Constants.POLYGON_STROKE_COLOR)); }
+    public void setPolygon() { polygon = map.addPolygon(new PolygonOptions().addAll(polygonPoints).strokeColor(Constants.BLUE)); }
 
     public int getIndex() { return index; }
 
@@ -77,14 +78,14 @@ public class Location implements Parcelable{
                     new LatLng(points.get(1).latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
                     new LatLng(points.get(2).latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5),
                     new LatLng(points.get(3).latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5)
-            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+            )).strokeColor(Constants.BLUE));
         } else {
             polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
                     new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
                     new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
                     new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5),
                     new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5)
-            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+            )).strokeColor(Constants.BLUE));
         }
     }
 
@@ -97,14 +98,14 @@ public class Location implements Parcelable{
                     new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, points.get(1).longitude),
                     new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, points.get(2).longitude),
                     new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, points.get(3).longitude)
-            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+            )).strokeColor(Constants.BLUE));
         } else {
             polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
                     new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, latlng.longitude),
                     new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, latlng.longitude),
                     new LatLng(latlng.latitude - units * Constants.POLYGON_UNIT, latlng.longitude),
                     new LatLng(latlng.latitude + units * Constants.POLYGON_UNIT, latlng.longitude)
-            )).strokeColor(Constants.POLYGON_STROKE_COLOR));
+            )).strokeColor(Constants.BLUE));
         }
     }
 

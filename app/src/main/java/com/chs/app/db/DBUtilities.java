@@ -2,7 +2,7 @@ package com.chs.app.db;
 
 import android.content.SharedPreferences;
 
-import com.chs.app.R;
+import com.chs.app.Constants;
 import com.chs.app.entities.Location;
 import com.chs.app.entities.Mode;
 import com.google.android.gms.maps.model.LatLng;
@@ -133,7 +133,7 @@ public class DBUtilities {
                         locationDb.getFloat("HomeLatitude", 0),
                         locationDb.getFloat("HomeLongitude", 0)
                 ),
-                locationDb.getInt("HomeImage", R.drawable.ic_home_black_24dp),
+                locationDb.getInt("HomeImage", Constants.HOME_ICON),
                 locationDb.getBoolean("HomeReceiveNotification", false),
                 stringToPoints(locationDb.getString("HomePolygon", null)),
                 getMode(locationDb.getInt("HomeModeIndex", 0))
@@ -171,7 +171,7 @@ public class DBUtilities {
                         locationDb.getFloat("SchoolLatitude", 0),
                         locationDb.getFloat("SchoolLongitude", 0)
                 ),
-                locationDb.getInt("SchoolImage", R.drawable.ic_school_black_24dp),
+                locationDb.getInt("SchoolImage", Constants.SCHOOL_BUTTON),
                 locationDb.getBoolean("SchoolReceiveNotification", false),
                 stringToPoints(locationDb.getString("SchoolPolygon", null)),
                 getMode(locationDb.getInt("SchoolModeIndex", 0))
@@ -209,7 +209,7 @@ public class DBUtilities {
                         locationDb.getFloat("WorkLatitude", 0),
                         locationDb.getFloat("WorkLongitude", 0)
                 ),
-                locationDb.getInt("WorkImage", R.drawable.ic_work_black_24dp),
+                locationDb.getInt("WorkImage", Constants.WORK_BUTTON),
                 locationDb.getBoolean("WorkReceiveNotification", false),
                 stringToPoints(locationDb.getString("WorkPolygon", null)),
                 getMode(locationDb.getInt("WorkModeIndex", 0))
@@ -235,10 +235,28 @@ public class DBUtilities {
         editor.putInt("ModeLastIndex", modeLastIndex).apply();
     }
 
+    /**
+     * Temporary method
+     */
+    public static void deleteModes() {
+        modeDb.edit().clear();
+    }
+
     public static Mode getMode(int index) {
         return new Mode(
                 modeDb.getString("Mode" + index + "Name", null)
                 //TODO: Add here other fields for mode
         );
+    }
+
+    public static List<Mode> getAllModes() {
+        Mode tmp;
+        List<Mode> modes = new ArrayList<Mode>();
+        for(int i = 0; i < modeLastIndex; i++) {
+            tmp = getMode(i);
+            if(tmp.getName() != null)
+                modes.add(tmp);
+        }
+        return modes;
     }
 }

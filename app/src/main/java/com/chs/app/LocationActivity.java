@@ -1,5 +1,6 @@
 package com.chs.app;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -7,6 +8,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
@@ -15,6 +17,7 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.chs.app.db.DBUtilities;
 import com.chs.app.entities.Location;
@@ -109,6 +112,29 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
                 startActivity(intent);
             }
         });
+
+        listLocations.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final AdapterView<?> myParent = parent;
+                final int myPosition = position;
+                if(position > 2) {
+                    new AlertDialog.Builder(LocationActivity.this)
+                            .setTitle("Delete Location")
+                            .setMessage("Do you really want to delete this location?")
+                            .setIcon(android.R.drawable.ic_dialog_alert)
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                                public void onClick(DialogInterface dialog, int whichButton) {
+                                    DBUtilities.deleteLocation((Location) myParent.getAdapter().getItem(myPosition));
+                                    setList();
+                                    Toast.makeText(LocationActivity.this, "Location deleted", Toast.LENGTH_SHORT).show();
+                                }})
+                            .setNegativeButton(android.R.string.no, null).show();
+                }
+                return true;
+            }
+        });
     }
 
     @Override
@@ -137,7 +163,7 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
         } else if (id == R.id.nav_howto) {
 
         } else if (id == R.id.nav_about) {
-
+            startActivity(new Intent(this, AboutActivity.class));
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);

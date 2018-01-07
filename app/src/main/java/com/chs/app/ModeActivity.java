@@ -1,5 +1,6 @@
 package com.chs.app;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -115,7 +116,7 @@ public class ModeActivity extends AppCompatActivity implements NavigationView.On
         } else if (id == R.id.nav_howto) {
 
         } else if (id == R.id.nav_about) {
-
+            startActivity(new Intent(this, AboutActivity.class));
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
