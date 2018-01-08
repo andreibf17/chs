@@ -10,7 +10,8 @@ public class Constants {
 
     public static final double POLYGON_UNIT = 0.0000300;
     public static final int BLUE = Color.BLUE;
-    public static final int HOME_ICON = R.drawable.ic_home_black_24dp;
-    public static final int SCHOOL_BUTTON = R.drawable.ic_school_black_24dp;
-    public static final int WORK_BUTTON = R.drawable.ic_work_black_24dp;
+    public static final int HOME_ICON = R.drawable.home_location_icon;
+    public static final int SCHOOL_ICON = R.drawable.school_location_icon;
+    public static final int WORK_ICON = R.drawable.work_location_icon;
+    public static final int LOCATION_PIN_ICON = R.drawable.location_pin_icon;
 }

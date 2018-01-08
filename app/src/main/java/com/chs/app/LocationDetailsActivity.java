@@ -1,8 +1,11 @@
 package com.chs.app;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
@@ -25,7 +28,15 @@ import android.widget.Toast;
 
 import com.chs.app.db.DBUtilities;
 import com.chs.app.entities.Location;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -53,6 +64,10 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_details);
+
+        LocationManager lm = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        boolean gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         Toolbar toolbar = findViewById(R.id.toolbarLocationDetails);
         setSupportActionBar(toolbar);
@@ -88,6 +103,8 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             mode.setText(location.getMode().getName());
             checkbox.setChecked(location.getReceiveNotification());
         }
+
+        displayLocationSettingsRequest();
     }
 
     /**
@@ -230,6 +247,41 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
         }
     }
 
+    private void displayLocationSettingsRequest() {
+        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
+                .addApi(LocationServices.API).build();
+        googleApiClient.connect();
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(10000 / 2);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true);
+
+        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        try {
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
+                            status.startResolutionForResult(LocationDetailsActivity.this, LOCATION_REQ_PERMISSION);
+                        } catch (IntentSender.SendIntentException e) {}
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        break;
+                }
+            }
+        });
+    }
+
     // Check for permission to access Location
     private boolean checkLocationPermission() {
         // Ask for permission if it wasn't granted yet
@@ -278,17 +330,17 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
                         break;
                     }
                     case "School": {
-                        location.setImage(Constants.SCHOOL_BUTTON);
+                        location.setImage(Constants.SCHOOL_ICON);
                         DBUtilities.saveSchool(location);
                         break;
                     }
                     case "Work": {
-                        location.setImage(Constants.WORK_BUTTON);
+                        location.setImage(Constants.WORK_ICON);
                         DBUtilities.saveWork(location);
                         break;
                     }
                     default: {
-                        location.setImage(R.drawable.ic_location_on_black_24dp);
+                        location.setImage(Constants.LOCATION_PIN_ICON);
                         DBUtilities.saveLocation(location);
                         break;
                     }

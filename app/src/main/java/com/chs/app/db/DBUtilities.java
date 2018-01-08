@@ -171,7 +171,7 @@ public class DBUtilities {
                         locationDb.getFloat("SchoolLatitude", 0),
                         locationDb.getFloat("SchoolLongitude", 0)
                 ),
-                locationDb.getInt("SchoolImage", Constants.SCHOOL_BUTTON),
+                locationDb.getInt("SchoolImage", Constants.SCHOOL_ICON),
                 locationDb.getBoolean("SchoolReceiveNotification", false),
                 stringToPoints(locationDb.getString("SchoolPolygon", null)),
                 getMode(locationDb.getInt("SchoolModeIndex", 0))
@@ -209,7 +209,7 @@ public class DBUtilities {
                         locationDb.getFloat("WorkLatitude", 0),
                         locationDb.getFloat("WorkLongitude", 0)
                 ),
-                locationDb.getInt("WorkImage", Constants.WORK_BUTTON),
+                locationDb.getInt("WorkImage", Constants.WORK_ICON),
                 locationDb.getBoolean("WorkReceiveNotification", false),
                 stringToPoints(locationDb.getString("WorkPolygon", null)),
                 getMode(locationDb.getInt("WorkModeIndex", 0))
