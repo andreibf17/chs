@@ -53,7 +53,7 @@ public class Location implements Parcelable{
 
     public List<LatLng> getPolygonPoints() { return polygonPoints; }
 
-    public void setPolygonPoints(List<LatLng> polygonPoints) { this.polygonPoints = polygonPoints; }
+    public void setPolygonPoints(Polygon polygon) { polygonPoints = polygon.getPoints(); }
 
     public void setPolygon() { polygon = map.addPolygon(new PolygonOptions().addAll(polygonPoints).strokeColor(Constants.BLUE)); }
 
@@ -153,8 +153,15 @@ public class Location implements Parcelable{
         dest.writeDouble(latlng.latitude);
         dest.writeDouble(latlng.longitude);
         dest.writeInt(image);
-        dest.writeString(mode.getName());
-        //TODO: add here other fields of mode
+        if(mode != null) {
+            dest.writeString(mode.getName());
+            dest.writeByte((byte) (mode.isWifi() ? 1 : 0));
+            dest.writeByte((byte) (mode.isMobileData() ? 0 : 1));
+            dest.writeByte((byte) (mode.isBluetooth() ? 0 : 1));
+            dest.writeByte((byte) (mode.isAirplaneMode() ? 0 : 1));
+            dest.writeInt(mode.getIndex());
+            //TODO: add here other fields of mode
+        }
     }
 
     /**
@@ -172,7 +179,12 @@ public class Location implements Parcelable{
                     receiveNotif,
                     coordinates,
                     new Mode(
-                            in.readString()
+                            in.readString(),
+                            in.readByte() == 1,
+                            in.readByte() == 1,
+                            in.readByte() == 1,
+                            in.readByte() == 1,
+                            in.readInt()
                     )
             );
         }

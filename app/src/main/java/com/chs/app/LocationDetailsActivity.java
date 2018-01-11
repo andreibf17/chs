@@ -1,6 +1,7 @@
 package com.chs.app;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -19,6 +20,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -28,6 +30,7 @@ import android.widget.Toast;
 
 import com.chs.app.db.DBUtilities;
 import com.chs.app.entities.Location;
+import com.chs.app.services.ModeParameterServices;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -50,13 +53,14 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
     private GoogleMap mMap;
     private Location location = new Location();
     private boolean update;
+    private boolean modeSet;
     private boolean markerSet = false;
     private SeekBar widthSeekBar;
     private SeekBar heightSeekBar;
-    private SeekBar rotateSeekBar;
     private CheckBox checkbox;
     private boolean dirty = false;
     private EditText editText;
+    private Button modeButton;
 
     private final int LOCATION_REQ_PERMISSION = 1;
 
@@ -86,6 +90,7 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
 
         editText = findViewById(R.id.locationTitle);
         update = this.getIntent().getExtras().getBoolean("Update");
+        modeSet = this.getIntent().getExtras().getBoolean("ModeSet");
 
         checkbox = findViewById(R.id.checkBox);
         checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -96,13 +101,47 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             }
         });
 
-        if(update) {
+        modeButton = findViewById(R.id.locationMode);
+
+        if(update || modeSet) {
             location = this.getIntent().getExtras().getParcelable("Location");
             editText.setText(location.getName());
             Button mode = findViewById(R.id.locationMode);
             mode.setText(location.getMode().getName());
             checkbox.setChecked(location.getReceiveNotification());
+            modeButton.setText(location.getMode().getName());
         }
+
+        modeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(update) {
+                    Intent intent = new Intent(v.getContext(), ModeListActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean("Update", update);
+                    bundle.putString("Fixed", getIntent().getExtras().getString("Fixed"));
+                    location.widenPolygon(widthSeekBar.getProgress());
+                    location.heightenPolygon(heightSeekBar.getProgress());
+                    location.setPolygonPoints(location.getPolygon());
+                    bundle.putBoolean("FromLocation", true);
+                    bundle.putParcelable("Location", location);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                } else {
+                    Intent intent = new Intent(v.getContext(), ModeListActivity.class);
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean("Update", update);
+                    bundle.putString("Fixed", getIntent().getExtras().getString("Fixed"));
+                    location.widenPolygon(widthSeekBar.getProgress());
+                    location.heightenPolygon(heightSeekBar.getProgress());
+                    location.setPolygonPoints(location.getPolygon());
+                    bundle.putBoolean("FromLocation", true);
+                    bundle.putParcelable("Location", location);
+                    intent.putExtras(bundle);
+                    startActivity(intent);
+                }
+            }
+        });
 
         displayLocationSettingsRequest();
     }
@@ -192,7 +231,7 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             }
         });
 
-        if(update) {
+        if(update || modeSet) {
             location.setMap(mMap);  //map must be set before any other operations with the location
             location.setMarker(this);
             location.setPolygon();
@@ -318,12 +357,12 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
 
     @Override
     public void onBackPressed() {
-        if(!update) {
-            if(dirty) {
+        update = this.getIntent().getExtras().getBoolean("Update");
+        if (!update) {
+            if (dirty) {
                 location.setName(editText.getText().toString());
                 location.setReceiveNotification(checkbox.isChecked());
-                location.setMode(DBUtilities.getMode(1)); //TODO
-                switch(getIntent().getExtras().getString("Fixed")) {
+                switch (getIntent().getExtras().getString("Fixed")) {
                     case "Home": {
                         location.setImage(Constants.HOME_ICON);
                         DBUtilities.saveHome(location);
@@ -348,7 +387,7 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
 
             }
         } else {
-            switch(getIntent().getExtras().getString("Fixed")) {
+            switch (getIntent().getExtras().getString("Fixed")) {
                 case "Home": {
                     DBUtilities.updateHome(location);
                     break;
@@ -367,7 +406,8 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
                 }
             }
         }
-        super.onBackPressed();
+        startActivity(new Intent(getApplicationContext(), MainActivity.class));
+        //super.onBackPressed();
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -375,16 +415,25 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (id == R.id.nav_preferences) {
-        } else if (id == R.id.nav_howto) {
+        if (id == R.id.nav_howto) {
 
         } else if (id == R.id.nav_about) {
             startActivity(new Intent(this, AboutActivity.class));
+        } else if (id == R.id.nav_exit) {
+            notificationManager.cancel(Constants.APP_NOTIFICATION_ID);
+            System.exit(1);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void displayModeDetails(View view) {
+        ModeParameterServices.enableWifi(getApplicationContext(), true);
+        ModeParameterServices.enableMobileData(getApplicationContext(), true);
+        ModeParameterServices.setBrightness(getApplicationContext(), 0);
     }
 }

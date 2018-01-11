@@ -5,7 +5,8 @@
     android:layout_height="match_parent"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:layout_marginTop="50dp">
+    android:layout_marginTop="50dp"
+    tools:context="com.chs.app.LocationDetailsActivity">
 
     <LinearLayout
         android:id="@+id/mapLayout"
@@ -113,12 +114,13 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="75"
-                android:text="Mode"
+                android:text="No mode"
                 android:gravity="center"
-                android:textColor="#000"
+                android:textColor="#747474"
                 android:textStyle="bold"
                 android:textSize="40sp"
-                android:background="@color/modeBackgroundColor" />
+                android:background="@color/modeBackgroundColor"
+                android:onClick="displayModeDetails" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

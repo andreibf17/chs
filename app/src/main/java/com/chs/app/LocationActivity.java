@@ -1,5 +1,7 @@
 package com.chs.app;
 
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -158,12 +160,15 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (id == R.id.nav_preferences) {
-        } else if (id == R.id.nav_howto) {
+        if (id == R.id.nav_howto) {
 
         } else if (id == R.id.nav_about) {
             startActivity(new Intent(this, AboutActivity.class));
+        } else if (id == R.id.nav_exit) {
+            notificationManager.cancel(Constants.APP_NOTIFICATION_ID);
+            System.exit(1);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
