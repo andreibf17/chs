@@ -32,7 +32,6 @@ public class Location implements Parcelable{
     private GoogleMap map;
     private Polygon polygon;
     private List<LatLng> polygonPoints;
-    private int image;
     private boolean receiveNotification;
     private Mode mode;
 
@@ -40,13 +39,21 @@ public class Location implements Parcelable{
 
     public Location() {}
 
-    public Location(String name, LatLng latlng, int image, boolean receiveNotification, List<LatLng> polygonPoints, Mode mode) {
+    public Location(String name, LatLng latlng, boolean receiveNotification, List<LatLng> polygonPoints, Mode mode) {
         this.latlng = latlng;
         this.name = name;
-        this.image = image;
         this.receiveNotification = receiveNotification;
         this.polygonPoints = polygonPoints;
         this.mode = mode;
+    }
+
+    public Location(String name, LatLng latlng, boolean receiveNotification, List<LatLng> polygonPoints, Mode mode, int index) {
+        this.latlng = latlng;
+        this.name = name;
+        this.receiveNotification = receiveNotification;
+        this.polygonPoints = polygonPoints;
+        this.mode = mode;
+        this.index = index;
     }
 
     public Polygon getPolygon() { return this.polygon; }
@@ -74,17 +81,17 @@ public class Location implements Parcelable{
             List<LatLng> points = polygon.getPoints();
             polygon.remove();
             polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
-                    new LatLng(points.get(0).latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
-                    new LatLng(points.get(1).latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
-                    new LatLng(points.get(2).latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5),
-                    new LatLng(points.get(3).latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5)
+                    new LatLng(points.get(0).latitude, latlng.longitude + units * Constants.POLYGON_UNIT),
+                    new LatLng(points.get(1).latitude, latlng.longitude + units * Constants.POLYGON_UNIT),
+                    new LatLng(points.get(2).latitude, latlng.longitude - units * Constants.POLYGON_UNIT),
+                    new LatLng(points.get(3).latitude, latlng.longitude - units * Constants.POLYGON_UNIT)
             )).strokeColor(Constants.BLUE));
         } else {
             polygon = map.addPolygon(new PolygonOptions().addAll(Arrays.asList(
-                    new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
-                    new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT *1.5),
-                    new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5),
-                    new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT *1.5)
+                    new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT),
+                    new LatLng(latlng.latitude, latlng.longitude + units * Constants.POLYGON_UNIT),
+                    new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT),
+                    new LatLng(latlng.latitude, latlng.longitude - units * Constants.POLYGON_UNIT)
             )).strokeColor(Constants.BLUE));
         }
     }
@@ -124,10 +131,6 @@ public class Location implements Parcelable{
 
     public void removePolygon() { if(polygon != null) polygon.remove(); }
 
-    public int getImage() { return image; }
-
-    public void setImage(int image) { this.image = image; }
-
     public GoogleMap getMap() { return map; }
 
     public void setMap(GoogleMap map) { this.map = map; }
@@ -152,16 +155,17 @@ public class Location implements Parcelable{
         dest.writeString(name);
         dest.writeDouble(latlng.latitude);
         dest.writeDouble(latlng.longitude);
-        dest.writeInt(image);
         if(mode != null) {
             dest.writeString(mode.getName());
             dest.writeByte((byte) (mode.isWifi() ? 1 : 0));
-            dest.writeByte((byte) (mode.isMobileData() ? 0 : 1));
-            dest.writeByte((byte) (mode.isBluetooth() ? 0 : 1));
-            dest.writeByte((byte) (mode.isAirplaneMode() ? 0 : 1));
+            dest.writeByte((byte) (mode.isBluetooth() ? 1 : 0));
+            dest.writeInt(mode.getNotificationVolume());
+            dest.writeInt(mode.getBrightness());
+            dest.writeInt(mode.getRingVolume());
+            dest.writeByte((byte) (mode.isVibrateForCalls() ? 1 : 0));
             dest.writeInt(mode.getIndex());
-            //TODO: add here other fields of mode
         }
+        dest.writeInt(index);
     }
 
     /**
@@ -175,17 +179,19 @@ public class Location implements Parcelable{
             return new Location(
                     in.readString(),
                     new LatLng(in.readDouble(), in.readDouble()),
-                    in.readInt(),
                     receiveNotif,
                     coordinates,
                     new Mode(
                             in.readString(),
                             in.readByte() == 1,
                             in.readByte() == 1,
-                            in.readByte() == 1,
+                            in.readInt(),
+                            in.readInt(),
+                            in.readInt(),
                             in.readByte() == 1,
                             in.readInt()
-                    )
+                    ),
+                    in.readInt()
             );
         }
 

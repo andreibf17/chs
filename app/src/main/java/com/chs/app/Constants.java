@@ -8,7 +8,7 @@ import android.graphics.Color;
 
 public class Constants {
 
-    public static final double POLYGON_UNIT = 0.0000300;
+    public static final double POLYGON_UNIT = 0.000015;
     public static final int BLUE = Color.BLUE;
     public static final int HOME_ICON = R.drawable.home_location_icon;
     public static final int SCHOOL_ICON = R.drawable.school_location_icon;

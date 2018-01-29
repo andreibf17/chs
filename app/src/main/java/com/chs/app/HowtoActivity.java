@@ -10,19 +10,21 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.text.Html;
-import android.text.Spanned;
 import android.view.MenuItem;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.Button;
 
-public class AboutActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+import com.chs.app.video.LocationVideoActivity;
+import com.chs.app.video.ModeVideoActivity;
+
+public class HowtoActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_about);
+        setContentView(R.layout.activity_howto);
 
-        Toolbar toolbar = findViewById(R.id.toolbarAbout);
+        Toolbar toolbar = findViewById(R.id.toolbarHowto);
         setSupportActionBar(toolbar);
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -33,9 +35,30 @@ public class AboutActivity extends AppCompatActivity implements NavigationView.O
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        Spanned sp = Html.fromHtml(getString(R.string.about_text), Html.FROM_HTML_MODE_COMPACT);
-        TextView aboutLabel = findViewById(R.id.about_label);
-        aboutLabel.setText(sp);
+
+        Button addLocationButton = findViewById(R.id.locationVideoButton);
+        addLocationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(HowtoActivity.this, LocationVideoActivity.class));
+            }
+        });
+        /*addLocationButton.setCompoundDrawablesRelative(
+                null,
+                getApplicationContext().getResources().getDrawable(R.drawable.add_location),
+                null,
+                null );*/
+
+        Button addModeButton = findViewById(R.id.modeVideoButton);
+        addModeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(HowtoActivity.this, ModeVideoActivity.class));
+            }
+        });
+        /*Drawable modeImg = getApplicationContext().getResources().getDrawable(R.drawable.add_mode);
+        modeImg.setBounds( 0, 50, 0, 150 );
+        addModeButton.setCompoundDrawables( modeImg, null, null, null );*/
     }
 
     @SuppressWarnings("StatementWithEmptyBody")

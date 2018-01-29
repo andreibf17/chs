@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginTop="70dp"
+    android:orientation="vertical"
+    android:weightSum="100">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="45"
+        android:weightSum="100"
+        android:gravity="center_horizontal">
+
+        <Button
+            android:id="@+id/modeVideoButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="60"
+            android:text="Create&#10;mode"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:drawableStart="@drawable/add_mode"
+            android:background="@drawable/video_background" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="45"
+        android:weightSum="100"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="40dp">
+
+        <Button
+            android:id="@+id/locationVideoButton"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="60"
+            android:text="Create&#10;location"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:onClick="createMode"
+            android:drawableStart="@drawable/add_location"
+            android:background="@drawable/video_background"/>
+
+    </LinearLayout>
+
+</LinearLayout>

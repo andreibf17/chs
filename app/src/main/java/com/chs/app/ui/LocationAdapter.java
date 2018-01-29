@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.chs.app.Constants;
 import com.chs.app.R;
 import com.chs.app.entities.Location;
 
@@ -57,7 +58,15 @@ public class LocationAdapter extends ArrayAdapter<Location> {
 
         itemHolder.ilTitle.setText(hItem.getName());
         itemHolder.ilMode.setText(hItem.getMode().getName());
-        itemHolder.ilIcon.setImageResource(hItem.getImage());
+        if(position == 0) {
+            itemHolder.ilIcon.setImageResource(Constants.HOME_ICON);
+        } else if(position == 1) {
+            itemHolder.ilIcon.setImageResource(Constants.SCHOOL_ICON);
+        } else if(position == 2) {
+            itemHolder.ilIcon.setImageResource(Constants.WORK_ICON);
+        } else {
+            itemHolder.ilIcon.setImageResource(Constants.LOCATION_PIN_ICON);
+        }
 
         return view;
     }

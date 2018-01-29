@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -21,6 +20,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -30,16 +30,7 @@ import android.widget.Toast;
 
 import com.chs.app.db.DBUtilities;
 import com.chs.app.entities.Location;
-import com.chs.app.services.ModeParameterServices;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -47,6 +38,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LocationDetailsActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
@@ -58,9 +52,9 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
     private SeekBar widthSeekBar;
     private SeekBar heightSeekBar;
     private CheckBox checkbox;
-    private boolean dirty = false;
     private EditText editText;
     private Button modeButton;
+    private Map<String,Object> dirtyState = new HashMap<>();
 
     private final int LOCATION_REQ_PERMISSION = 1;
 
@@ -89,6 +83,7 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
         mapFragment.getMapAsync(this);
 
         editText = findViewById(R.id.locationTitle);
+        this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         update = this.getIntent().getExtras().getBoolean("Update");
         modeSet = this.getIntent().getExtras().getBoolean("ModeSet");
 
@@ -106,8 +101,6 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
         if(update || modeSet) {
             location = this.getIntent().getExtras().getParcelable("Location");
             editText.setText(location.getName());
-            Button mode = findViewById(R.id.locationMode);
-            mode.setText(location.getMode().getName());
             checkbox.setChecked(location.getReceiveNotification());
             modeButton.setText(location.getMode().getName());
         }
@@ -142,8 +135,23 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
                 }
             }
         });
+    }
 
-        displayLocationSettingsRequest();
+    public void setDirtyState() {
+        dirtyState.put("Text", editText.getText().toString());
+        dirtyState.put("WidthSeekBar", widthSeekBar.getProgress());
+        dirtyState.put("HeightSeekBar", heightSeekBar.getProgress());
+        dirtyState.put("ReceiveNotification", checkbox.isChecked());
+    }
+
+    public boolean isDirty() {
+        boolean tmp = true;
+        tmp &= editText.getText().toString().equals(dirtyState.get("Text"));
+        tmp &= widthSeekBar.getProgress() == ((Integer)dirtyState.get("WidthSeekBar")).intValue();
+        tmp &= heightSeekBar.getProgress() == ((Integer)dirtyState.get("HeightSeekBar")).intValue();
+        tmp &= checkbox.isChecked() == ((Boolean)dirtyState.get("ReceiveNotification")).booleanValue();
+        tmp &= !markerSet;
+        return !tmp;
     }
 
     /**
@@ -171,7 +179,6 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(location != null && location.getLatlng() != null && location.getMap() != null)
                     location.widenPolygon(progress);
-                dirty = true;
             }
 
             @Override
@@ -191,7 +198,6 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if(location != null && location.getLatlng() != null && location.getMap() != null)
                     location.heightenPolygon(progress);
-                dirty = true;
             }
 
             @Override
@@ -208,7 +214,6 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
         checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                dirty = true;
                 location.setReceiveNotification(checkbox.isChecked());
             }
         });
@@ -216,17 +221,14 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                dirty = true;
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                dirty = true;
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-                dirty = true;
                 location.setName(editText.getText().toString());
             }
         });
@@ -235,90 +237,57 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             location.setMap(mMap);  //map must be set before any other operations with the location
             location.setMarker(this);
             location.setPolygon();
-            heightSeekBar.setProgress((int)((location.getPolygonPoints().get(0).latitude - location.getLatlng().latitude) / Constants.POLYGON_UNIT));
             widthSeekBar.setProgress((int)((location.getPolygonPoints().get(0).longitude - location.getLatlng().longitude) / Constants.POLYGON_UNIT));
+            heightSeekBar.setProgress((int)((location.getPolygonPoints().get(0).latitude - location.getLatlng().latitude) / Constants.POLYGON_UNIT));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(location.getLatlng()));
             mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+            markerSet = true;
         } else {
-            if(checkLocationPermission()) {
+            if (checkLocationPermission()) {
                 LocationServices.getFusedLocationProviderClient(this).getLastLocation()
                         .addOnSuccessListener(this, new OnSuccessListener<android.location.Location>() {
                             @Override
                             public void onSuccess(android.location.Location location) {
-                                // Got last known location. In some rare situations this can be null.
                                 if (location != null) {
                                     mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(location.getLatitude(), location.getLongitude())));
-                                    mMap.animateCamera(CameraUpdateFactory.zoomTo(20));
+                                    mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
                                 }
                             }
                         });
             }
             heightSeekBar.setEnabled(false);
             widthSeekBar.setEnabled(false);
-            mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-
-                @Override
-                public void onMapLongClick(LatLng point) {
-                    if(!markerSet) {
-                        markerSet = true;
-                        location.setMap(mMap);
-                        location.setLatlng(point);
-                        location.setMarker(getApplicationContext());
-                        heightSeekBar.setEnabled(true);
-                        widthSeekBar.setEnabled(true);
-                    }
-                    dirty = true;
-                }
-            });
-            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                @Override
-                public boolean onMarkerClick(Marker marker) {
-                    marker.remove();
-                    location.removePolygon();
-                    location.setLatlng(null);
-                    heightSeekBar.setEnabled(false);
-                    widthSeekBar.setEnabled(false);
-                    markerSet = false;
-                    dirty = false;
-                    return false;
-                }
-            });
         }
-    }
+        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
 
-    private void displayLocationSettingsRequest() {
-        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(getApplicationContext())
-                .addApi(LocationServices.API).build();
-        googleApiClient.connect();
-
-        LocationRequest locationRequest = LocationRequest.create();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(10000 / 2);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
-        builder.setAlwaysShow(true);
-
-        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
-        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
             @Override
-            public void onResult(LocationSettingsResult result) {
-                final Status status = result.getStatus();
-                switch (status.getStatusCode()) {
-                    case LocationSettingsStatusCodes.SUCCESS:
-                        break;
-                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        try {
-                            // Show the dialog by calling startResolutionForResult(), and check the result
-                            // in onActivityResult().
-                            status.startResolutionForResult(LocationDetailsActivity.this, LOCATION_REQ_PERMISSION);
-                        } catch (IntentSender.SendIntentException e) {}
-                        break;
-                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        break;
+            public void onMapLongClick(LatLng point) {
+                if(!markerSet) {
+                    markerSet = true;
+                    location.setMap(mMap);
+                    location.setLatlng(point);
+                    location.setMarker(getApplicationContext());
+                    heightSeekBar.setEnabled(true);
+                    heightSeekBar.setProgress(0);
+                    widthSeekBar.setEnabled(true);
+                    widthSeekBar.setProgress(0);
                 }
             }
         });
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                marker.remove();
+                location.removePolygon();
+                location.setLatlng(null);
+                heightSeekBar.setEnabled(false);
+                widthSeekBar.setEnabled(false);
+                markerSet = false;
+                return false;
+            }
+        });
+
+        setDirtyState();
     }
 
     // Check for permission to access Location
@@ -359,27 +328,23 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
     public void onBackPressed() {
         update = this.getIntent().getExtras().getBoolean("Update");
         if (!update) {
-            if (dirty) {
+            if (isDirty() || modeSet) {
                 location.setName(editText.getText().toString());
                 location.setReceiveNotification(checkbox.isChecked());
                 switch (getIntent().getExtras().getString("Fixed")) {
                     case "Home": {
-                        location.setImage(Constants.HOME_ICON);
                         DBUtilities.saveHome(location);
                         break;
                     }
                     case "School": {
-                        location.setImage(Constants.SCHOOL_ICON);
                         DBUtilities.saveSchool(location);
                         break;
                     }
                     case "Work": {
-                        location.setImage(Constants.WORK_ICON);
                         DBUtilities.saveWork(location);
                         break;
                     }
                     default: {
-                        location.setImage(Constants.LOCATION_PIN_ICON);
                         DBUtilities.saveLocation(location);
                         break;
                     }
@@ -388,22 +353,22 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             }
         } else {
             switch (getIntent().getExtras().getString("Fixed")) {
-                case "Home": {
-                    DBUtilities.updateHome(location);
-                    break;
-                }
-                case "School": {
-                    DBUtilities.updateSchool(location);
-                    break;
-                }
-                case "Work": {
-                    DBUtilities.updateWork(location);
-                    break;
-                }
-                default: {
-                    DBUtilities.updateLocation(location);
-                    break;
-                }
+            case "Home": {
+                DBUtilities.updateHome(location);
+                break;
+            }
+            case "School": {
+                DBUtilities.updateSchool(location);
+                break;
+            }
+            case "Work": {
+                DBUtilities.updateWork(location);
+                break;
+            }
+            default: {
+                DBUtilities.updateLocation(location);
+                break;
+            }
             }
         }
         startActivity(new Intent(getApplicationContext(), MainActivity.class));
@@ -423,17 +388,15 @@ public class LocationDetailsActivity extends AppCompatActivity implements OnMapR
             startActivity(new Intent(this, AboutActivity.class));
         } else if (id == R.id.nav_exit) {
             notificationManager.cancel(Constants.APP_NOTIFICATION_ID);
-            System.exit(1);
+            notificationManager.cancel(Constants.LOCATION_NOTIFICATION_ID);
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.putExtra("EXIT", true);
+            startActivity(intent);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    public void displayModeDetails(View view) {
-        ModeParameterServices.enableWifi(getApplicationContext(), true);
-        ModeParameterServices.enableMobileData(getApplicationContext(), true);
-        ModeParameterServices.setBrightness(getApplicationContext(), 0);
     }
 }

@@ -168,7 +168,11 @@ public class LocationActivity extends AppCompatActivity implements NavigationVie
             startActivity(new Intent(this, AboutActivity.class));
         } else if (id == R.id.nav_exit) {
             notificationManager.cancel(Constants.APP_NOTIFICATION_ID);
-            System.exit(1);
+            notificationManager.cancel(Constants.LOCATION_NOTIFICATION_ID);
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.putExtra("EXIT", true);
+            startActivity(intent);
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
